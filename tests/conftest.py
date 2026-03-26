@@ -10,13 +10,11 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-# from src.exceptions.handler import book_digest_api_exception_handler
+from src.api.v1.router import base_router
 from src.config.settings import get_settings
-
-# from src.api.v1.router import base_router
 from src.database.session import get_db_session
-
-# from src.exceptions import BookDigestApiError
+from src.exceptions import BookDigestApiError
+from src.exceptions.handler import book_digest_api_exception_handler
 from src.models import Base
 
 settings = get_settings()
@@ -24,8 +22,8 @@ DATABASE_URL = settings.db_url
 
 # Setup test app
 test_app = FastAPI()
-# test_app.include_router(base_router)
-# test_app.add_exception_handler(BookDigestApiError, book_digest_api_exception_handler)
+test_app.include_router(base_router)
+test_app.add_exception_handler(BookDigestApiError, book_digest_api_exception_handler)
 
 
 @pytest_asyncio.fixture
