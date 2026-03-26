@@ -5,7 +5,6 @@ from pydantic import BaseModel, ConfigDict
 
 class BookBase(BaseModel):
     author_id: int
-    endorser_id: int
     title: str
     published_year: int
 
@@ -18,7 +17,6 @@ class BookCreate(BookBase):
 
 class BookUpdate(BookBase):
     author_id: Optional[int] = None
-    endorser_id: Optional[int] = None
     title: Optional[str] = None
     published_year: Optional[int] = None
 
