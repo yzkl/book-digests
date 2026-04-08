@@ -18,6 +18,7 @@
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
     // Workbench settings
     "workbench.colorCustomizations": {
-        "titleBar.activeBackground": "#0480ec8d"
+        "titleBar.activeBackground": "#0480ec8d",
+        "activityBar.activeBorder": "#0480ec8d",
     }
 }
