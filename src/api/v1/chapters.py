@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src import services
@@ -18,7 +18,7 @@ PREFIX = "/chapters"
 router = APIRouter(prefix=PREFIX)
 
 
-@router.post("/", response_model=Chapter, status_code=201)
+@router.post("/", response_model=Chapter, status_code=status.HTTP_201_CREATED)
 @limiter.limit("60/second")
 async def create_chapter(
     request: Request, params: ChapterCreate, db: AsyncSession = Depends(get_db_session)
