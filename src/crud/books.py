@@ -20,10 +20,9 @@ async def find_book(id: int, session: AsyncSession) -> models.Book:
     db_book = await session.get(models.Book, id)
 
     if not db_book:
-        logger.error(
-            "Failed to fetch Book",
-            extra={"operation": "find_book", "book_id": id},
-        )
+        logger.bind(
+            code=EntityDoesNotExistError.code, event="find_book", book_id=id
+        ).warning("Failed to fetch Book")
 
         raise EntityDoesNotExistError(f"Book with id={id} not found")
 

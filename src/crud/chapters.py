@@ -22,9 +22,10 @@ async def find_chapter(id: int, session: AsyncSession) -> models.Chapter:
     db_chapter = await session.get(models.Chapter, id)
 
     if not db_chapter:
-        logger.error(
+        logger.bind(
+            code=EntityDoesNotExistError.code, event="find_chapter", chapter_id=id
+        ).warning(
             "Failed to fetch Chapter",
-            extra={"operation": "find_chapter", "chapter_id": id},
         )
 
         raise EntityDoesNotExistError(f"Chapter with id={id} not found")

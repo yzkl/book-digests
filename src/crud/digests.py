@@ -20,10 +20,9 @@ async def find_digest(id: int, session: AsyncSession) -> models.Digest:
     db_digest = await session.get(models.Digest, id)
 
     if not db_digest:
-        logger.error(
-            "Failed to fetch Digest",
-            extra={"operation": "find_digest", "digest_id": id},
-        )
+        logger.bind(
+            code=EntityDoesNotExistError.code, event="find_digest", digest_id=id
+        ).error("Failed to fetch Digest")
 
         raise EntityDoesNotExistError(f"Digest with id={id} not found")
 

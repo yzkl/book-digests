@@ -20,10 +20,9 @@ async def find_author(id: int, session: AsyncSession) -> models.Author:
     db_author = await session.get(models.Author, id)
 
     if not db_author:
-        logger.error(
-            "Failed to fetch Author",
-            extra={"operation": "find_author", "author_id": id},
-        )
+        logger.bind(
+            code=EntityDoesNotExistError.code, event="find_author", author_id=id
+        ).warning("Author not found")
 
         raise EntityDoesNotExistError(f"Author with id={id} not found")
 
