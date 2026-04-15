@@ -22,7 +22,7 @@ async def find_digest(id: int, session: AsyncSession) -> models.Digest:
     if not db_digest:
         logger.bind(
             code=EntityDoesNotExistError.code, event="find_digest", digest_id=id
-        ).error("Failed to fetch Digest")
+        ).warning("Failed to fetch Digest")
 
         raise EntityDoesNotExistError(f"Digest with id={id} not found")
 
