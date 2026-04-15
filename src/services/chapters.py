@@ -16,26 +16,21 @@ async def create_chapter(params: ChapterCreate, session: AsyncSession) -> Chapte
         await session.commit()
         await session.refresh(db_chapter)
 
-        logger.info(
-            "Chapter successfully created",
-            extra={
-                "operation": "create_chapter",
-                "chapter_number": params.number,
-                "chapter_id": db_chapter.id,
-            },
-        )
+        logger.bind(
+            event="chapter_created",
+            chapter_number=params.number,
+            chapter_id=db_chapter.id,
+        ).info("Chapter successfully created")
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to create Chapter due to foreign key constraints",
-            extra={
-                "operation": "create_chapter",
-                "chapter_number": params.number,
-                "book_id": params.book_id,
-            },
-        )
+        logger.bind(
+            code=RelatedEntityDoesNotExistError.code,
+            event="create_chapter",
+            chapter_number=params.number,
+            book_id=params.book_id,
+        ).warning("Failed to create Chapter due to foreign key constraints")
 
         raise RelatedEntityDoesNotExistError(
             f"Book with id={params.book_id} not found"
@@ -47,14 +42,9 @@ async def create_chapter(params: ChapterCreate, session: AsyncSession) -> Chapte
 async def get_chapter(id: int, session: AsyncSession) -> Chapter:
     db_chapter = await chapters.find_chapter(id, session)
 
-    logger.info(
-        "Chapter successfully fetched",
-        extra={
-            "operation": "get_chapter",
-            "chapter_number": db_chapter.number,
-            "chapter_id": id,
-        },
-    )
+    logger.bind(
+        event="chapter_fetched", chapter_number=db_chapter.number, chapter_id=id
+    ).info("Chapter successfully fetched")
 
     return Chapter.model_validate(db_chapter)
 
@@ -64,15 +54,9 @@ async def get_chapters(
 ) -> Sequence[Chapter]:
     db_chapters = await chapters.find_chapters(session, page, size)
 
-    logger.info(
-        "Chapters fetched",
-        extra={
-            "operation": "get_chapters",
-            "page": page,
-            "size": size,
-            "count": len(db_chapters),
-        },
-    )
+    logger.bind(
+        event="chapters_listed", page=page, size=size, count=len(db_chapters)
+    ).info("Chapters listed")
 
     return [Chapter.model_validate(d) for d in db_chapters]
 
@@ -88,27 +72,20 @@ async def update_chapter(
         await session.commit()
         await session.refresh(db_chapter)
 
-        logger.info(
-            "Chapter successfully updated",
-            extra={
-                "operation": "update_chapter",
-                "chapter_number": chapter_number,
-                "chapter_id": id,
-            },
-        )
+        logger.bind(
+            event="chapter_updated", chapter_number=chapter_number, chapter_id=id
+        ).info("Chapter successfully updated")
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to update Chapter due to foreign key constraints",
-            extra={
-                "operation": "update_chapter",
-                "chapter_number": chapter_number,
-                "chapter_id": id,
-                "book_id": book_id,
-            },
-        )
+        logger.bind(
+            code=RelatedEntityDoesNotExistError.code,
+            event="update_chapter",
+            chapter_number=chapter_number,
+            chapter_id=id,
+            book_id=book_id,
+        ).warning("Failed to update Chapter due to foreign key constraints")
 
         raise RelatedEntityDoesNotExistError(
             f"Book with id={book_id} not found"
@@ -123,14 +100,11 @@ async def delete_chapter(id: int, session: AsyncSession) -> Chapter:
 
     await session.commit()
 
-    logger.info(
-        "Chapter successfully deleted",
-        extra={
-            "operation": "delete_chapter",
-            "chapter_number": chapter_number,
-            "chapter_id": id,
-            "deleted": True,
-        },
-    )
+    logger.bind(
+        event="chapter_deleted",
+        chapter_number=chapter_number,
+        chapter_id=id,
+        deleted=True,
+    ).info("Chapter successfully deleted")
 
     return Chapter.model_validate(db_chapter)

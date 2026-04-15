@@ -16,25 +16,20 @@ async def create_author(params: AuthorCreate, session: AsyncSession) -> Author:
         await session.commit()
         await session.refresh(db_author)
 
-        logger.info(
-            "Author successfully created",
-            extra={
-                "operation": "create_author",
-                "author_name": db_author.name,
-                "author_id": db_author.id,
-            },
-        )
+        logger.bind(
+            event="author_created",
+            author_name=db_author.name,
+            author_id=db_author.id,
+        ).info("Author successfully created")
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to create Author due to integrity constraints",
-            extra={
-                "operation": "create_author",
-                "author_name": params.name,
-            },
-        )
+        logger.bind(
+            code=EntityAlreadyExistsError.code,
+            event="create_author",
+            author_name=params.name,
+        ).warning("Failed to create Author due to integrity constraints")
 
         raise EntityAlreadyExistsError(
             f"Author '{params.name}' already exists"
@@ -46,13 +41,8 @@ async def create_author(params: AuthorCreate, session: AsyncSession) -> Author:
 async def get_author(id: int, session: AsyncSession) -> Author:
     db_author = await authors.find_author(id, session)
 
-    logger.info(
-        "Author successfully fetched",
-        extra={
-            "operation": "get_author",
-            "author_name": db_author.name,
-            "author_id": id,
-        },
+    logger.bind(event="author_fetched", author_name=db_author.name, author_id=id).info(
+        "Author successfully fetched"
     )
 
     return Author.model_validate(db_author)
@@ -63,15 +53,9 @@ async def get_authors(
 ) -> Sequence[Author]:
     db_authors = await authors.find_authors(session, page, size)
 
-    logger.info(
-        "Authors fetched",
-        extra={
-            "operation": "get_authors",
-            "page": page,
-            "size": size,
-            "count": len(db_authors),
-        },
-    )
+    logger.bind(
+        event="authors_listed", page=page, size=size, count=len(db_authors)
+    ).info("Authors listed")
 
     return [Author.model_validate(d) for d in db_authors]
 
@@ -84,26 +68,19 @@ async def update_author(id: int, params: AuthorUpdate, session: AsyncSession) ->
         await session.commit()
         await session.refresh(db_author)
 
-        logger.info(
-            "Author successfully updated",
-            extra={
-                "operation": "update_author",
-                "author_name": author_name,
-                "author_id": id,
-            },
+        logger.bind(event="author_updated", author_name=author_name, author_id=id).info(
+            "Author successfully updated"
         )
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to update Author due to integrity constraints",
-            extra={
-                "operation": "update_author",
-                "author_name": author_name,
-                "author_id": id,
-            },
-        )
+        logger.bind(
+            code=EntityAlreadyExistsError.code,
+            event="update_author",
+            author_name=author_name,
+            author_id=id,
+        ).warning("Failed to update Author due to integrity constraints")
 
         raise EntityAlreadyExistsError(
             f"Author '{author_name}' already exists"
@@ -118,14 +95,8 @@ async def delete_author(id: int, session: AsyncSession) -> Author:
 
     await session.commit()
 
-    logger.info(
-        "Author successfully deleted",
-        extra={
-            "operation": "delete_author",
-            "author_name": author_name,
-            "author_id": id,
-            "deleted": True,
-        },
-    )
+    logger.bind(
+        event="author_deleted", author_name=author_name, author_id=id, deleted=True
+    ).info("Author successfully deleted")
 
     return Author.model_validate(db_author)

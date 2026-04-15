@@ -16,26 +16,18 @@ async def create_digest(params: DigestCreate, session: AsyncSession) -> Digest:
         await session.commit()
         await session.refresh(db_digest)
 
-        logger.info(
-            "Digest successfully created",
-            extra={
-                "operation": "create_digest",
-                "digest": params.digest,
-                "digest_id": db_digest.id,
-            },
+        logger.bind(event="digest_created", digest_id=db_digest.id).info(
+            "Digest successfully created"
         )
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to create Digest due to foreign key constraints",
-            extra={
-                "operation": "create_digest",
-                "digest": params.digest,
-                "chapter_id": params.chapter_id,
-            },
-        )
+        logger.bind(
+            code=RelatedEntityDoesNotExistError.code,
+            event="create_digest",
+            chapter_id=params.chapter_id,
+        ).warning("Failed to create Digest due to foreign key constraints")
 
         raise RelatedEntityDoesNotExistError(
             f"Chapter with id={params.chapter_id} not found"
@@ -47,13 +39,8 @@ async def create_digest(params: DigestCreate, session: AsyncSession) -> Digest:
 async def get_digest(id: int, session: AsyncSession) -> Digest:
     db_digest = await digests.find_digest(id, session)
 
-    logger.info(
-        "Digest successfully fetched",
-        extra={
-            "operation": "get_digest",
-            "digest": db_digest.digest,
-            "digest_id": id,
-        },
+    logger.bind(event="digest_fetched", digest_id=id).info(
+        "Digest successfully fetched"
     )
 
     return Digest.model_validate(db_digest)
@@ -64,49 +51,34 @@ async def get_digests(
 ) -> Sequence[Digest]:
     db_digests = await digests.find_digests(session, page, size)
 
-    logger.info(
-        "Digests fetched",
-        extra={
-            "operation": "get_digests",
-            "page": page,
-            "size": size,
-            "count": len(db_digests),
-        },
-    )
+    logger.bind(
+        event="digests_listed", page=page, size=size, count=len(db_digests)
+    ).info("Digests listed")
 
     return [Digest.model_validate(d) for d in db_digests]
 
 
 async def update_digest(id: int, params: DigestUpdate, session: AsyncSession) -> Digest:
     db_digest = await digests.update_digest(id, params, session)
-    digest = db_digest.digest
     chapter_id = db_digest.chapter_id
 
     try:
         await session.commit()
         await session.refresh(db_digest)
 
-        logger.info(
-            "Digest successfully updated",
-            extra={
-                "operation": "update_digest",
-                "digest": digest,
-                "digest_id": id,
-            },
+        logger.bind(event="digest_updated", digest_id=id).info(
+            "Digest successfully updated"
         )
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to update Digest due to foreign key constraints",
-            extra={
-                "operation": "update_digest",
-                "digest": digest,
-                "digest_id": id,
-                "chapter_id": chapter_id,
-            },
-        )
+        logger.bind(
+            code=RelatedEntityDoesNotExistError.code,
+            event="update_digest",
+            digest_id=id,
+            chapter_id=chapter_id,
+        ).warning("Failed to update Digest due to foreign key constraints")
 
         raise RelatedEntityDoesNotExistError(
             f"Chapter with id={chapter_id} not found"
@@ -117,18 +89,11 @@ async def update_digest(id: int, params: DigestUpdate, session: AsyncSession) ->
 
 async def delete_digest(id: int, session: AsyncSession) -> Digest:
     db_digest = await digests.delete_digest(id, session)
-    digest = db_digest.digest
 
     await session.commit()
 
-    logger.info(
+    logger.bind(event="digest_deleted", digest_id=id, deleted=True).info(
         "Digest successfully deleted",
-        extra={
-            "operation": "delete_digest",
-            "digest": digest,
-            "digest_id": id,
-            "deleted": True,
-        },
     )
 
     return Digest.model_validate(db_digest)

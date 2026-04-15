@@ -16,26 +16,19 @@ async def create_book(params: BookCreate, session: AsyncSession) -> Book:
         await session.commit()
         await session.refresh(db_book)
 
-        logger.info(
-            "Book successfully created",
-            extra={
-                "operation": "create_book",
-                "book_title": params.title,
-                "book_id": db_book.id,
-            },
-        )
+        logger.bind(
+            event="book_created", book_title=params.title, book_id=db_book.id
+        ).info("Book successfully created")
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to create Book due to foreign key constraints",
-            extra={
-                "operation": "create_book",
-                "book_title": params.title,
-                "author_id": params.author_id,
-            },
-        )
+        logger.bind(
+            code=RelatedEntityDoesNotExistError.code,
+            event="create_book",
+            book_title=params.title,
+            author_id=params.author_id,
+        ).warning("Failed to create Book due to foreign key constraints")
 
         raise RelatedEntityDoesNotExistError(
             f"Author with id={params.author_id} not found"
@@ -47,13 +40,8 @@ async def create_book(params: BookCreate, session: AsyncSession) -> Book:
 async def get_book(id: int, session: AsyncSession) -> Book:
     db_book = await books.find_book(id, session)
 
-    logger.info(
-        "Book successfully fetched",
-        extra={
-            "operation": "get_book",
-            "book_title": db_book.title,
-            "book_id": id,
-        },
+    logger.bind(event="book_fetched", book_title=db_book.title, book_id=id).info(
+        "Book successfully fetched"
     )
 
     return Book.model_validate(db_book)
@@ -64,14 +52,8 @@ async def get_books(
 ) -> Sequence[Book]:
     db_books = await books.find_books(session, page, size)
 
-    logger.info(
-        "Books fetched",
-        extra={
-            "operation": "get_books",
-            "page": page,
-            "size": size,
-            "count": len(db_books),
-        },
+    logger.bind(event="books_listed", page=page, size=size, count=len(db_books)).info(
+        "Books listed"
     )
 
     return [Book.model_validate(d) for d in db_books]
@@ -86,27 +68,20 @@ async def update_book(id: int, params: BookUpdate, session: AsyncSession) -> Boo
         await session.commit()
         await session.refresh(db_book)
 
-        logger.info(
-            "Book successfully updated",
-            extra={
-                "operation": "update_book",
-                "book_title": book_title,
-                "book_id": id,
-            },
+        logger.bind(event="book_updated", book_title=book_title, book_id=id).info(
+            "Book successfully updated"
         )
 
     except IntegrityError as exc:
         await session.rollback()
 
-        logger.exception(
-            "Failed to update Book due to foreign key constraints",
-            extra={
-                "operation": "update_book",
-                "book_title": book_title,
-                "book_id": id,
-                "author_id": author_id,
-            },
-        )
+        logger.bind(
+            code=RelatedEntityDoesNotExistError.code,
+            event="update_book",
+            book_title=book_title,
+            book_id=id,
+            author_id=author_id,
+        ).warning("Failed to update Book due to foreign key constraints")
 
         raise RelatedEntityDoesNotExistError(
             f"Author with id={author_id} not found"
@@ -121,14 +96,8 @@ async def delete_book(id: int, session: AsyncSession) -> Book:
 
     await session.commit()
 
-    logger.info(
-        "Book successfully deleted",
-        extra={
-            "operation": "delete_book",
-            "book_title": book_title,
-            "book_id": id,
-            "deleted": True,
-        },
-    )
+    logger.bind(
+        event="book_deleted", book_title=book_title, book_id=id, deleted=True
+    ).info("Book successfully deleted")
 
     return Book.model_validate(db_book)
