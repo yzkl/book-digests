@@ -55,8 +55,6 @@ services:
       sh -c "alembic upgrade head && pytest"
     
     
-
-
 volumes:
   test_data:
 
