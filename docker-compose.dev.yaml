@@ -21,19 +21,6 @@ services:
     networks:
       - book-digests-test-network
       
-  migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev    
-    env_file:
-      - .env.dev
-    depends_on:
-      db:
-        condition: service_healthy
-    command: alembic upgrade head
-    networks:
-      - book-digests-test-network
-
 
   web:
     build:
@@ -59,14 +46,13 @@ services:
       dockerfile: Dockerfile.dev
     env_file:
       - .env.dev
-    volumes:
-      - ./src:/app/src
-      - ./tests:/app/tests
     depends_on:
-      - web
+      db:
+        condition: service_healthy
     networks:
       - book-digests-test-network
-    command: pytest
+    command: >
+      sh -c "alembic upgrade head && pytest"
     
     
 
