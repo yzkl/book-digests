@@ -10,8 +10,8 @@ COPY ./pyproject.toml ./pyproject.toml
 COPY ./uv.lock ./uv.lock
 RUN uv sync --dev --locked
 
-## ---------------------------- Production stage --------------------------- ##
-FROM python:3.12-slim-bookworm AS production
+## ---------------------------- Development stage --------------------------- ##
+FROM python:3.12-slim-bookworm AS dev
 
 WORKDIR /app
 
