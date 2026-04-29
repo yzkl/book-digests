@@ -23,6 +23,6 @@ COPY ./alembic.ini ./alembic.ini
 COPY ./.env.dev ./.env.dev 
 
 ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/src"
+ENV PYTHONPATH="/app"
 
 EXPOSE 4001
