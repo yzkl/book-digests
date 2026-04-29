@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - test_data:/var/lib/postgresql/data
+      - dev_data:/var/lib/postgresql/data
       - ./postgres/initdb:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
@@ -46,7 +46,7 @@ services:
 
 
 volumes:
-  test_data:
+  dev_data:
 
 networks:
   dev-network:
