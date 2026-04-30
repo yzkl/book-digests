@@ -15,6 +15,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Create .env file from GitHub secret
+      run: echo "${{ secrets.DOTENV_FILE }}" > .env.test
     
     - name: Build and test the test Docker image
       run: docker compose -f docker-compose.test.yaml up --build --abort-on-container-exit --exit-code-from tests
