@@ -1,10 +1,6 @@
 services:
   db:
     image: postgres:15
-    env_file:
-      - .env.test
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -17,37 +13,17 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
-    restart: always
     networks:
       - test-network
       
-
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.test
-    image: yzklalagano/book-digests:test
-    env_file:
-      - .env.test
-    environment:
-      ENV: test
-    ports:
-      - "4001:4001"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - test-network
-    command: uvicorn src.main:app --host 0.0.0.0 --port 4001 --log-level info
-
 
   tests:
     build:
       context: .
       dockerfile: Dockerfile.test
     image: yzklalagano/book-digests:test
-    env_file:
-      - .env.test
+    environment:
+      ENV: test
     depends_on:
       db:
         condition: service_healthy

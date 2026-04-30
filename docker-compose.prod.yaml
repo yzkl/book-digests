@@ -1,18 +1,16 @@
 services:
   db:
     image: postgres:15
-    env_file:
-      - .env.prod
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
     volumes:
       - data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -21,34 +19,21 @@ services:
     networks:
       - book-digests-network
       
-  migrate:
-    build: .
-    env_file:
-      - .env.prod
-    depends_on:
-      db:
-        condition: service_healthy
-    command: alembic upgrade head
-    networks:
-      - book-digests-network
-
 
   web:
     build: .
-    env_file:
-      - .env.prod
     environment:
       ENV: prod
     ports:
-      - "4001:4001"
+      - "4001:8080"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - book-digests-network
-    command: uvicorn src.main:app --host 0.0.0.0 --port 4001 --log-level info
+    command: >
+      sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8080 --log-level info"
     
-
 
 volumes:
   data:

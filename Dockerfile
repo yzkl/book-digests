@@ -25,5 +25,3 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/src"
 
 EXPOSE 4001
-
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "4001", "--log-level", "info"]
